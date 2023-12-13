@@ -7,6 +7,7 @@ import net.bebooking.booking.model.BookingId;
 import net.bebooking.tenant.model.TenantId;
 import org.bson.Document;
 import org.ecom24.common.types.ValueTypeUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ public class MongoBookingRepository implements BookingRepository {
 
     private final MongoClient mongoClient;
 
+    @Autowired
     public MongoBookingRepository(MongoClient mongoClient) {
         this.mongoClient = mongoClient;
     }
@@ -35,7 +37,7 @@ public class MongoBookingRepository implements BookingRepository {
                     doc.put("status", it.getStatus());
                     doc.put("note", it.getNote());
                     doc.put("createdAt", it.getCreatedAt());
-                    mongoClient.getDatabase("test").getCollection("booking").insertOne(doc);
+                    mongoClient.getDatabase("tenant").getCollection("booking").insertOne(doc);
                     return id;
                 }).toList();
     }

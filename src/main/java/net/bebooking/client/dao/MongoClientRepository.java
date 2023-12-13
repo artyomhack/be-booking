@@ -8,6 +8,7 @@ import net.bebooking.tenant.model.TenantId;
 import org.bson.Document;
 import org.ecom24.common.types.ValueTypeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -18,7 +19,6 @@ public class MongoClientRepository implements ClientRepository {
 
     private final MongoClient mongoClient;
 
-    @Autowired
     public MongoClientRepository(MongoClient mongoClient) {
         this.mongoClient = mongoClient;
     }

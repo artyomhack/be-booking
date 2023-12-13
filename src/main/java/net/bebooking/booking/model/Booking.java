@@ -6,6 +6,7 @@ import org.ecom24.common.utils.ErrorUtils;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
 @Getter
 public class Booking {
@@ -28,7 +29,7 @@ public class Booking {
         return new Booking(BookingId.EMPTY, from, to, BookingStatus.CREATED, note, null);
     }
 
-    public static Booking of(Integer id, LocalDateTime from, LocalDateTime to, BookingStatus status, String note, LocalDateTime createdAt) {
+    public static Booking of(BookingId id, LocalDateTime from, LocalDateTime to, BookingStatus status, String note, LocalDateTime createdAt) {
         return new Booking(BookingId.parseNotEmpty(id), from, to, status, note, createdAt);
     }
 
