@@ -1,5 +1,6 @@
 package net.bebooking.config;
 
+import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
@@ -7,6 +8,9 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import net.bebooking.booking.dao.BookingRepository;
 import net.bebooking.booking.dao.MongoBookingRepository;
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.pojo.PojoCodecProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
@@ -14,29 +18,18 @@ import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import java.util.Arrays;
 
 @Configuration
-public class MongoConfig extends AbstractMongoClientConfiguration {
-
-    @Override
-    protected String getDatabaseName() {
-        return "test";
-    }
-
-    @Override
+public class MongoConfig {
     @Bean
     public MongoClient mongoClient() {
         String username = "root";
         String password = "ASDqwe123";
         String host = "89.188.107.13";
         int port = 27017;
+        String connectionString = "mongodb://" + username + ":" + password + "@" + host + ":" + port;
+        ConnectionString connection = new ConnectionString(connectionString);
 
-        MongoCredential credential = MongoCredential.createCredential(username, getDatabaseName(), password.toCharArray());
-        MongoClientSettings settings = MongoClientSettings.builder()
-                .credential(credential)
-                .applyToClusterSettings(builder ->
-                        builder.hosts(Arrays.asList(new ServerAddress(host, port))))
-                .build();
 
-        return MongoClients.create(settings);
+        return MongoClients.create(connection);
     }
 
     @Bean

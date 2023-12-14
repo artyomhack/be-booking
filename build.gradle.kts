@@ -27,6 +27,7 @@ allprojects {
         implementation("org.springframework.data:spring-data-jdbc")
         implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
         implementation("org.mongodb:mongo-java-driver:3.12.14")
+        implementation("org.mongodb:mongodb-driver-sync")
 
         compileOnly("org.projectlombok:lombok:1.18.30")
         annotationProcessor("org.projectlombok:lombok:1.18.30")
