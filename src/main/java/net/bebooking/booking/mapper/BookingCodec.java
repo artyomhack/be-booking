@@ -20,6 +20,7 @@ public class BookingCodec implements CollectibleCodec<Booking> {
      *
      * converter - Передаёт данные из mongo в java объект, некий mapper
      */
+
     private final CodecRegistry registry;
     private final Codec<Document> documentCodec;
     private final BookingConverter converter;

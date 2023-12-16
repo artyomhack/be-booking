@@ -5,6 +5,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import net.bebooking.booking.mapper.BookingCodec;
+import net.bebooking.booking.mapper.BookingConverter;
 import net.bebooking.booking.model.Booking;
 import net.bebooking.booking.model.BookingId;
 import net.bebooking.config.MongoConfig;
@@ -16,11 +17,13 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.ecom24.common.types.AbstractType;
 import org.ecom24.common.types.ValueTypeUtils;
 import org.junit.Assert;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.event.annotation.BeforeTestExecution;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDateTime;
@@ -54,10 +57,13 @@ public class BookDAOTest {
                 .withCodecRegistry(codecRegistry);
     }
 
+    @BeforeEach
+    public void clearCache() {
+        MongoUtils.cleanCollection(mongoDatabase.getCollection("booking"));
+    }
+
     @Test
     public void insertAllShouldSaveBooking_checkWithHelpFetchById() {
-        MongoUtils.cleanCollection(mongoDatabase.getCollection("booking"));
-
         Booking booking_1 = createTempsBookings().get(0);
         var id = StreamSupport.stream(insertAll(List.of(booking_1)).spliterator(), false)
                 .findFirst()
@@ -79,7 +85,6 @@ public class BookDAOTest {
         /*
         Очищаем и добавляем bookings в mongo
          */
-        MongoUtils.cleanCollection(mongoDatabase.getCollection("booking"));
         var bookingIds = StreamSupport.stream(insertAll(createTempsBookings()).spliterator(), false)
                                     .map(AbstractType::getValue)
                                     .toList();
@@ -93,7 +98,6 @@ public class BookDAOTest {
 
     @Test
     public void deleteAllShouldClearBookings_checkWithHelperInsertAllAndFetchAll() {
-        MongoUtils.cleanCollection(mongoDatabase.getCollection("booking"));
         var bookingIds = insertAll(createTempsBookings());
 
         deleteAll(bookingIds);
@@ -126,16 +130,9 @@ public class BookDAOTest {
         return StreamSupport.stream(bookings.spliterator(), false)
                 .map(it -> {
                     ValueTypeUtils.requireEmpty(it.getId());
-                    var id = BookingId.generate();
-                    var doc = new Document();
-                    doc.put("_id", id.getValue());
-                    doc.put("from", it.getFrom());
-                    doc.put("to", it.getTo());
-                    doc.put("status", it.getStatus().toString());
-                    doc.put("note", it.getNote());
-                    doc.put("createdAt", it.getCreatedAt());
+                    var doc = new BookingConverter().convert(it);
                     mongoDatabase.getCollection("booking").insertOne(doc);
-                    return id;
+                    return BookingId.parseNotEmpty(doc.get("_id"));
                 })
                 .toList();
     }
@@ -172,9 +169,9 @@ public class BookDAOTest {
 
 
     private static List<Booking> createTempsBookings() {
-        String fromDate = "09.12.2023 12:34:56";
-        String toDate = "11.01.2024 18:45:30";
-        var format = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+        String fromDate = "2023-12-25 18:34:56";
+        String toDate = "2024-01-11 11:45:30";
+        var format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         var from = LocalDateTime.parse(fromDate, format);
         var to = LocalDateTime.parse(toDate, format);
 

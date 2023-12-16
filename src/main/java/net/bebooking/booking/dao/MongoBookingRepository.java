@@ -6,8 +6,8 @@ import net.bebooking.booking.model.Booking;
 import net.bebooking.booking.model.BookingId;
 import net.bebooking.tenant.model.TenantId;
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.ecom24.common.types.ValueTypeUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -17,10 +17,11 @@ import java.util.stream.StreamSupport;
 public class MongoBookingRepository implements BookingRepository {
 
     private final MongoClient mongoClient;
+    private final CodecRegistry codecRegistry;
 
-    @Autowired
-    public MongoBookingRepository(MongoClient mongoClient) {
+    public MongoBookingRepository(MongoClient mongoClient, CodecRegistry codecRegistry) {
         this.mongoClient = mongoClient;
+        this.codecRegistry = codecRegistry;
     }
 
     @Override
@@ -37,7 +38,10 @@ public class MongoBookingRepository implements BookingRepository {
                     doc.put("status", it.getStatus());
                     doc.put("note", it.getNote());
                     doc.put("createdAt", it.getCreatedAt());
-                    mongoClient.getDatabase("tenant").getCollection("booking").insertOne(doc);
+                    mongoClient.getDatabase(tenantId.toString())
+                               .withCodecRegistry(codecRegistry)
+                               .getCollection("booking")
+                               .insertOne(doc);
                     return id;
                 }).toList();
     }
@@ -46,8 +50,9 @@ public class MongoBookingRepository implements BookingRepository {
     public Booking fetchById(TenantId tenantId, BookingId bookingId) {
         //ValueTypeUtils.requireNotEmpty(tenantId);
         ValueTypeUtils.requireNotEmpty(bookingId);
-        var collection = mongoClient.getDatabase("test")
-                               .getCollection("booking");
+        var collection = mongoClient.getDatabase(tenantId.toString())
+                                    .withCodecRegistry(codecRegistry)
+                                    .getCollection("booking");
         return collection.find(
                 Filters.eq("_id", bookingId.getValue()), Booking.class
         ).first();
@@ -56,8 +61,9 @@ public class MongoBookingRepository implements BookingRepository {
     @Override
     public Iterable<Booking> fetchAll(TenantId tenantId) {
         //ValueTypeUtils.requireNotEmpty(tenantId)
-        var collection = mongoClient.getDatabase("test")
-                               .getCollection("booking", Booking.class);
+        var collection = mongoClient.getDatabase(tenantId.toString())
+                                    .withCodecRegistry(codecRegistry)
+                                    .getCollection("booking", Booking.class);
         var bookings = new ArrayList<Booking>();
         return collection.find().into(bookings);
     }
@@ -65,15 +71,17 @@ public class MongoBookingRepository implements BookingRepository {
     @Override
     public void deleteAll(TenantId tenantId, Iterable<BookingId> bookingIds) {
         //ValueTypeUtils.requireNotEmpty(tenantId)
-        StreamSupport
-                .stream(bookingIds.spliterator(), false)
-                .forEach(ValueTypeUtils::requireNotEmpty);
-        var collection = mongoClient.getDatabase("test").getCollection("booking", Booking.class);
-        StreamSupport
-                .stream(bookingIds.spliterator(), false)
-                .forEach(it -> collection.findOneAndDelete(
-                        Filters.eq("_id", it.getValue())
-                ));
+        StreamSupport.stream(bookingIds.spliterator(), false)
+                     .forEach(ValueTypeUtils::requireNotEmpty);
+
+        var collection = mongoClient.getDatabase(tenantId.toString())
+                                    .withCodecRegistry(codecRegistry)
+                                    .getCollection("booking", Booking.class);
+
+        StreamSupport.stream(bookingIds.spliterator(), false)
+                     .forEach(it -> collection.findOneAndDelete(
+                            Filters.eq("_id", it.getValue())
+                     ));
 
     }
 }

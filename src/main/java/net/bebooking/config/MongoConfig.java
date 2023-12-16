@@ -2,8 +2,6 @@ package net.bebooking.config;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
-import com.mongodb.MongoCredential;
-import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import net.bebooking.booking.dao.BookingRepository;
@@ -14,12 +12,8 @@ import org.bson.Document;
 import org.bson.codecs.Codec;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
-import org.bson.codecs.pojo.PojoCodecProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
-
-import java.util.Arrays;
 
 @Configuration
 public class MongoConfig {
@@ -37,7 +31,23 @@ public class MongoConfig {
     }
 
     @Bean
+    public CodecRegistry codecRegistry() {
+        CodecRegistry codecRegistry = MongoClientSettings.getDefaultCodecRegistry();
+        Codec<Document> documentCodec = codecRegistry.get(Document.class);
+        Codec<Booking> bookingCodec = new BookingCodec(codecRegistry);
+
+        codecRegistry =  CodecRegistries.fromRegistries(
+                MongoClientSettings.getDefaultCodecRegistry(),
+                CodecRegistries.fromCodecs(
+                        documentCodec,
+                        bookingCodec
+                )
+        );
+        return codecRegistry;
+    }
+
+    @Bean
     public BookingRepository bookingRepository() {
-        return new MongoBookingRepository(mongoClient());
+        return new MongoBookingRepository(mongoClient(), codecRegistry());
     }
 }
