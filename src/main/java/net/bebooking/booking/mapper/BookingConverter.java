@@ -5,30 +5,33 @@ import net.bebooking.booking.model.BookingId;
 import net.bebooking.booking.model.BookingStatus;
 import org.bson.Document;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 public class BookingConverter {
-    public static Document convert(Booking booking) {
+    public Document convert(Booking booking) {
         return new Document()
-                .append("_id", Optional.ofNullable(booking.getId())
-                                       .orElseGet(BookingId::generate))
-                .append("from", booking.getFrom())
-                .append("to", booking.getTo())
+                .append("_id", booking.getId())
+                .append("from", booking.getFrom().atZone(ZoneOffset.UTC))
+                .append("to", booking.getTo().atZone(ZoneOffset.UTC))
                 .append("status", booking.getStatus().toString())
                 .append("note", booking.getNote())
-                .append("createdAt", booking.getCreatedAt());
+                .append("createdAt", booking.getCreatedAt().atZone(ZoneOffset.UTC));
     }
 
-    public static Booking convert(Document document) {
+    public Booking convert(Document document) {
         return Booking.of(
-                BookingId.parseNotEmpty(document.getObjectId("_id")),
-                document.get("from", LocalDateTime.class),
-                document.get("to", LocalDateTime.class),
+                BookingId.parseNotEmpty(document.get("_id")),
+                LocalDateTime.ofInstant(document.getDate("from").toInstant(), ZoneOffset.UTC),
+                LocalDateTime.ofInstant(document.getDate("to").toInstant(), ZoneOffset.UTC),
                 BookingStatus.valueOf(document.getString("status")),
                 document.getString("note"),
-                document.get("createdAt", LocalDateTime.class)
+                LocalDateTime.ofInstant(document.getDate("createdAt").toInstant(), ZoneOffset.UTC)
         );
     }
 }

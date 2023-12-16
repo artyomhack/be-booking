@@ -2,10 +2,8 @@ package net.bebooking.booking.mapper;
 
 import com.mongodb.MongoClient;
 import net.bebooking.booking.model.Booking;
-import org.bson.BsonReader;
-import org.bson.BsonValue;
-import org.bson.BsonWriter;
-import org.bson.Document;
+import net.bebooking.booking.model.BookingId;
+import org.bson.*;
 import org.bson.codecs.Codec;
 import org.bson.codecs.CollectibleCodec;
 import org.bson.codecs.DecoderContext;
@@ -45,32 +43,44 @@ public class BookingCodec implements CollectibleCodec<Booking> {
     }
 
     @Override
-    public Booking generateIdIfAbsentFromDocument(Booking document) {
-        return null;
+    public Booking generateIdIfAbsentFromDocument(Booking value) {
+        return documentHasId(value) ? value
+                : Booking.of(
+                BookingId.generate(),
+                value.getFrom(),
+                value.getTo(),
+                value.getStatus(),
+                value.getNote(),
+                value.getCreatedAt()
+        );
     }
 
     @Override
-    public boolean documentHasId(Booking document) {
-        return false;
+    public boolean documentHasId(Booking value) {
+        return value.getId().isEmpty();
     }
 
     @Override
-    public BsonValue getDocumentId(Booking document) {
-        return null;
+    public BsonValue getDocumentId(Booking value) {
+        if (!documentHasId(value))
+            throw new IllegalArgumentException("The document does not contain an _id");
+        return new BsonString(value.getId().getValue().toString());
     }
 
     @Override
     public Booking decode(BsonReader reader, DecoderContext decoderContext) {
-        return null;
+        var doc = documentCodec.decode(reader, decoderContext);
+        return this.converter.convert(doc);
     }
 
     @Override
     public void encode(BsonWriter writer, Booking value, EncoderContext encoderContext) {
-
+        var doc = this.converter.convert(value);
+        documentCodec.encode(writer,doc, encoderContext);
     }
 
     @Override
     public Class<Booking> getEncoderClass() {
-        return null;
+        return Booking.class;
     }
 }
