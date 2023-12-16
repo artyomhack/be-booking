@@ -5,13 +5,8 @@ import net.bebooking.booking.model.BookingId;
 import net.bebooking.booking.model.BookingStatus;
 import org.bson.Document;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
 
 public class BookingConverter {
     public Document convert(Booking booking) {
