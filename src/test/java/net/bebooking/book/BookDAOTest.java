@@ -23,12 +23,14 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.event.annotation.BeforeTestExecution;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 @RunWith(SpringRunner.class)
@@ -171,16 +173,24 @@ public class BookDAOTest {
     private static List<Booking> createTempsBookings() {
         String fromDate = "2023-12-25 18:34:56";
         String toDate = "2024-01-11 11:45:30";
-        var format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        var from = LocalDateTime.parse(fromDate, format);
-        var to = LocalDateTime.parse(toDate, format);
+        DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-        return List.of(
-                Booking.newOf(from, to, "Большой зал с ТВ"),
-                Booking.newOf(from.plusHours(4), to.plusHours(1), "Хочу большой зал с ТВ"),
-                Booking.newOf(from.plusHours(12), to.plusHours(4), "Можно пиво в холодосе"),
-                Booking.newOf(from.plusHours(16), to.plusHours(24), "Буду с собакой")
+        LocalDateTime from = LocalDateTime.parse(fromDate, format);
+        LocalDateTime to = LocalDateTime.parse(toDate, format);
 
+        List<String> descriptions = List.of(
+                "Большой зал с ТВ", "Хочу большой зал с ТВ",
+                "Можно пиво в холодосе", "Буду с собакой"
         );
+
+        return Stream.iterate(0, i -> i + 1)
+                .limit(4)
+                .map(i -> Booking.newOf(
+                        from.plusHours(i * 4).atZone(ZoneId.systemDefault()).toInstant(),
+                        to.plusHours(i).atZone(ZoneId.systemDefault()).toInstant(),
+                        descriptions.get(i)
+                ))
+                .toList();
+
     }
 }

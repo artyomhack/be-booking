@@ -5,7 +5,9 @@ import net.bebooking.booking.model.BookingId;
 import net.bebooking.booking.model.BookingStatus;
 import org.bson.Document;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.Objects;
@@ -17,32 +19,24 @@ public class BookingConverter {
         var id = Objects.requireNonNullElse(booking.getId().getValueOrNull(), BookingId.generate().getValue());
         return new Document()
                 .append("_id", id)
-                .append("from", mapToDate(booking.getFrom()))
-                .append("to", mapToDate(booking.getTo()))
+                .append("from", booking.getFrom())
+                .append("to", booking.getTo())
                 .append("status", booking.getStatus().toString())
                 .append("note", booking.getNote())
-                .append("createdAt", mapToDate(booking.getCreatedAt()));
+                .append("createdAt", booking.getCreatedAt());
     }
 
     public Booking convert(Document document) {
         return Booking.of(
                 BookingId.parseNotEmpty(document.get("_id")),
-                mapToLocalDateTime(document, "from"),
-                mapToLocalDateTime(document, "to"),
+                document.getDate("from").toInstant(),
+                document.getDate("to").toInstant(),
                 BookingStatus.valueOf(document.getString("status")),
                 document.getString("note"),
-                mapToLocalDateTime(document, "createdAt")
+                document.getDate("createdAt")
+                                 .toInstant()
+                                 .atZone(ZoneId.systemDefault())
+                                 .toLocalDateTime()
         );
-    }
-
-    private LocalDateTime mapToLocalDateTime(Document document, String fieldName) {
-        Date date = document.getDate(fieldName);
-        return Optional.of(LocalDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC))
-                .orElseThrow(() -> new NullPointerException("Date can not be null") );
-    }
-
-    private Date mapToDate(LocalDateTime localDateTime) {
-        var zoneDateTime = localDateTime.atZone(ZoneOffset.UTC);
-        return Date.from(zoneDateTime.toInstant());
     }
 }
