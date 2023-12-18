@@ -10,6 +10,8 @@ import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecRegistry;
 
+import java.util.Optional;
+
 public class BookingCodec implements CollectibleCodec<Booking> {
 
     /**
@@ -63,9 +65,8 @@ public class BookingCodec implements CollectibleCodec<Booking> {
 
     @Override
     public BsonValue getDocumentId(Booking value) {
-        if (!documentHasId(value))
-            throw new IllegalArgumentException("The document does not contain an _id");
-        return new BsonString(value.getId().getValue().toString());
+        return Optional.of(new BsonString(value.getId().getValue().toString()))
+                .orElseThrow(() -> new NullPointerException("BookingId is null"));
     }
 
     @Override

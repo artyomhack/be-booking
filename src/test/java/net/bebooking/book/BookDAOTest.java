@@ -21,6 +21,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -129,14 +131,12 @@ public class BookDAOTest {
 
     //WORK
     private Iterable<BookingId> insertAll(Iterable<Booking> bookings) {
-        return StreamSupport.stream(bookings.spliterator(), false)
-                .map(it -> {
-                    ValueTypeUtils.requireEmpty(it.getId());
-                    var doc = new BookingConverter().convert(it);
-                    mongoDatabase.getCollection("booking").insertOne(doc);
-                    return BookingId.parseNotEmpty(doc.get("_id"));
-                })
-                .toList();
+        return StreamSupport.stream(bookings.spliterator(), false).map(it -> {
+            ValueTypeUtils.requireEmpty(it.getId());
+            var doc = new BookingConverter().convert(it);
+            mongoDatabase.getCollection("booking").insertOne(doc);
+            return BookingId.parseNotEmpty(doc.get("_id"));
+        }).toList();
     }
 
     //NEED MAPPER

@@ -21,11 +21,10 @@ public class MongoConfig {
     public MongoClient mongoClient() {
         String username = "root";
         String password = "ASDqwe123";
-        String host = "89.188.107.13";
+        String host = "mongo.bebooking.ru";
         int port = 27017;
-        String connectionString = "mongodb://" + username + ":" + password + "@" + host + ":" + port;
+        String connectionString = "mongodb://   " + username + ":" + password + "@" + host + ":" + port;
         ConnectionString connection = new ConnectionString(connectionString);
-
 
         return MongoClients.create(connection);
     }
