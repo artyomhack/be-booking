@@ -8,6 +8,7 @@ import net.bebooking.tenant.model.TenantId;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.ecom24.common.types.ValueTypeUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
