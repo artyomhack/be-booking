@@ -18,7 +18,7 @@ allprojects {
     plugins.apply("java-library")
 
     plugins.apply("org.springframework.boot")
-    plugins.apply("io.spring.dependency-management")
+    plugins.apply("io.spring.dependency-management"
 
     dependencies {
         api("org.ecom24.common:ecom-common-types:1.0.0")
