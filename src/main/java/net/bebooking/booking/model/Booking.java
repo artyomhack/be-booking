@@ -2,8 +2,6 @@ package net.bebooking.booking.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.bson.codecs.pojo.annotations.BsonCreator;
-import org.bson.codecs.pojo.annotations.BsonProperty;
 import org.ecom24.common.utils.ErrorUtils;
 
 import java.time.Instant;
@@ -65,4 +63,18 @@ public class Booking {
         this.to = to;
     }
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Booking booking = (Booking) o;
+
+        return Objects.equals(this.id.getValue(), booking.id.getValue());
+    }
+
+    @Override
+    public int hashCode() {
+        return Booking.class.hashCode() + id.hashCode() * 31;
+    }
 }
