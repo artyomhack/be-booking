@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import org.ecom24.common.utils.StringPatterns;
 
+import java.time.ZoneId;
+
 @AllArgsConstructor
 public class CreateUserRequest {
     @NotNull

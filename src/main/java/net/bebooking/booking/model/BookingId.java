@@ -1,12 +1,13 @@
 package net.bebooking.booking.model;
 
 import org.ecom24.common.types.common.IntType;
+import org.ecom24.common.types.common.UuidType;
 import org.ecom24.common.utils.NumberUtils;
 import org.ecom24.common.utils.StringUtils;
 
 import java.util.Optional;
 
-public class BookingId extends IntType {
+public class BookingId extends UuidType {
 
     public static BookingId EMPTY = new BookingId(null);
 
@@ -15,14 +16,17 @@ public class BookingId extends IntType {
         return parseNotEmpty(uuid);
     }
 
-    public static BookingId parse(Object intId) {
-        return Optional.ofNullable(intId).map(BookingId::new).orElse(EMPTY);
+    public static BookingId parse(Object uuid) {
+        return Optional
+                .ofNullable(uuid)
+                .map(BookingId::new)
+                .orElse(EMPTY);
     }
 
 
-    public static BookingId parseNotEmpty(Object intId) {
+    public static BookingId parseNotEmpty(Object uuid) {
         return Optional
-                .ofNullable(intId)
+                .ofNullable(uuid)
                 .map(BookingId::new)
                 .orElseThrow(() -> new IllegalArgumentException("Booking id must not be null"));
 
@@ -30,8 +34,9 @@ public class BookingId extends IntType {
 
     protected BookingId(Object value) {
         super(value);
-        NumberUtils.requireRangeOrNull(getValueOrNull(), 1, Integer.MAX_VALUE);
     }
+
+
 
 
 }

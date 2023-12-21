@@ -6,6 +6,7 @@ import org.ecom24.common.utils.ErrorUtils;
 import org.ecom24.common.utils.StringUtils;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -22,22 +23,26 @@ public class User {
     @Setter
     private String hashPassword;
 
+    @Setter
+    private ZoneId zoneId;
+
     private final  LocalDateTime createdAt;
 
-    public static User newOf(String fullName, String email, String hashPassword) {
-        return new User(UserId.EMPTY, fullName, email, hashPassword, null);
+    public static User newOf(String fullName, String email, String hashPassword, ZoneId zoneId) {
+        return new User(UserId.EMPTY, fullName, email, hashPassword, zoneId, null);
     }
 
-    public static User of(UserId id, String fullName, String email, String hashPassword, LocalDateTime createdAt) {
+    public static User of(UserId id, String fullName, String email, String hashPassword, ZoneId zoneId, LocalDateTime createdAt) {
         Objects.requireNonNull(id);
-        return new User(id, fullName, email, hashPassword, createdAt);
+        return new User(id, fullName, email, hashPassword, zoneId, createdAt);
     }
 
-    public User(UserId id, String fullName, String email, String hashPassword, LocalDateTime createdAt) {
+    public User(UserId id, String fullName, String email, String hashPassword, ZoneId zoneId, LocalDateTime createdAt) {
         this.id = id;
         setFullName(fullName);
         setEmail(email);
         this.hashPassword = hashPassword;
+        this.zoneId = zoneId;
         this.createdAt = Objects.requireNonNullElse(createdAt, LocalDateTime.now());
     }
 
