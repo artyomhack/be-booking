@@ -28,6 +28,6 @@ public class MongoUtils {
     }
 
     public static void cleanCache(MongoCollection<?> collection) {
-        collection.dropIndexes();
+        collection.deleteMany(new Document());
     }
 }

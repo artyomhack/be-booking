@@ -13,6 +13,7 @@ import org.bson.Document;
 import org.bson.codecs.Codec;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.ecom24.common.types.AbstractType;
 import org.ecom24.common.types.ValueTypeUtils;
 import org.springframework.stereotype.Repository;
 
@@ -98,7 +99,7 @@ public class MongoBookingRepository implements BookingRepository {
     }
 
     @Override
-    public void deleteAll(TenantId tenantId, Iterable<BookingId> bookingIds) {
+    public void deleteAllByIds(TenantId tenantId, Iterable<BookingId> bookingIds) {
         ValueTypeUtils.requireNotEmpty(tenantId);
         StreamSupport.stream(bookingIds.spliterator(), false)
                      .forEach(ValueTypeUtils::requireNotEmpty);
@@ -106,9 +107,9 @@ public class MongoBookingRepository implements BookingRepository {
         var data = mongoClient.getDatabase(tenantId.getValue().toString()).withCodecRegistry(codecRegistry);
         var collection = MongoUtils.requireCollection(data, "booking").withDocumentClass(Booking.class);
 
-        StreamSupport.stream(bookingIds.spliterator(), false).forEach(
-                it -> collection.findOneAndDelete(Filters.eq("_id", it.getValue())
-                )
-        );
+        var ids = StreamSupport.stream(bookingIds.spliterator(), false)
+                        .map(AbstractType::getValue).toList();
+        var filter = new Document("_id", new Document("$in", ids));
+        collection.deleteMany(filter);
     }
 }

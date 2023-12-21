@@ -16,5 +16,6 @@ public interface BookingRepository {
 
     Iterable<Booking> fetchAllByIds(TenantId tenantId, Iterable<BookingId> bookingIds);
 
-    void deleteAll(TenantId tenantId, Iterable<BookingId> bookingIds);
+    void deleteAllByIds(TenantId tenantId, Iterable<BookingId> bookingIds);
+
 }

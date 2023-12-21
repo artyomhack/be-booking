@@ -9,7 +9,7 @@ import net.bebooking.tenant.model.TenantId;
 import net.bebooking.utils.MongoUtils;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.runner.RunWith;
@@ -35,14 +35,17 @@ public class BookDAOTest {
     private final MongoClient mongoClient;
     private final static TenantId testTenant = MongoUtils.tenantTestOf();
 
+    //Не видит без аннотации
     @Autowired
     public BookDAOTest(BookingRepository repository, MongoClient mongoClient) {
         this.repository = repository;
         this.mongoClient = mongoClient;
     }
 
-    @BeforeAll
-    public void setUp() {
+    @AfterEach
+    public void removeCacheEachTest() {
+        MongoUtils.cleanCache(mongoClient.getDatabase(testTenant.getValue().toString())
+                .getCollection("booking"));
     }
 
     @AfterAll
@@ -105,6 +108,10 @@ public class BookDAOTest {
 
     @Test
     public void fetchAll_success() {
+        //На всякий случай очищаем перед заполнением.
+        MongoUtils.cleanCache(mongoClient.getDatabase(testTenant.getValue().toString())
+                .getCollection("booking"));
+
         var tempBookings = StreamSupport.stream(repository.insertAll(testTenant, createTempsBookings(Instant.parse("2023-12-25T18:34:56.00Z"),
                 Instant.parse("2024-01-12T08:45:51.00Z"))).spliterator(), false)
                 .toList().stream()
@@ -113,21 +120,25 @@ public class BookDAOTest {
 
         var bookings = StreamSupport.stream(repository.fetchAll(testTenant).spliterator(), false).toList();
 
-        Assert.assertEquals(4, bookings.size());
+        Assert.assertEquals(tempBookings.size(), bookings.size());
         Assert.assertArrayEquals(tempBookings.toArray(), bookings.toArray());
     }
 
+
+
     @Test
-    public void deleteAll_success() {
-        var tempBookings = StreamSupport.stream(repository.insertAll(testTenant, createTempsBookings(Instant.parse("2023-12-25T18:34:56.00Z"),
-                Instant.parse("2024-01-12T08:45:51.00Z"))).spliterator(), false).toList();
+    public void deleteAll_fail() {
+        var tempBookings = StreamSupport.stream(repository.insertAll(testTenant, createTempsBookings(
+                Instant.parse("2023-12-25T18:34:56.00Z"),
+                Instant.parse("2024-01-12T08:45:51.00Z")
+        )).spliterator(), false).toList();
 
         Assert.assertEquals(4, tempBookings.size());
-        repository.deleteAll(testTenant, tempBookings);
+        repository.deleteAllByIds(testTenant, tempBookings);
 
-        var bookings = StreamSupport.stream(repository.fetchAll(testTenant).spliterator(), false).toList();
-
-        Assert.assertTrue(bookings.isEmpty());
+        tempBookings.forEach(booking -> {
+            Assert.assertNull(repository.fetchById(testTenant, booking));
+        });
     }
 
     private static List<Booking> createTempsBookings(Instant fromDate, Instant toDate) {
