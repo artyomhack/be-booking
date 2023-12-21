@@ -72,10 +72,11 @@ public class MongoBookingRepository implements BookingRepository {
     public Iterable<Booking> fetchAll(TenantId tenantId) {
         ValueTypeUtils.requireNotEmpty(tenantId);
         var data = mongoClient.getDatabase(tenantId.getValue().toString()).withCodecRegistry(codecRegistry);
-        var collection = data.getCollection("booking", Booking.class);
+        var collection = MongoUtils.requireCollection(data, "booking").withDocumentClass(Booking.class);
         var bookings = new ArrayList<Booking>();
         return collection.find().into(bookings)
-                .stream().toList();
+                .stream()
+                .toList();
     }
 
     @Override
@@ -92,7 +93,8 @@ public class MongoBookingRepository implements BookingRepository {
         var bookings = new ArrayList<Booking>();
 
         return collection.find(filter).into(bookings)
-                .stream().toList();
+                .stream()
+                .toList();
     }
 
     @Override
@@ -101,8 +103,8 @@ public class MongoBookingRepository implements BookingRepository {
         StreamSupport.stream(bookingIds.spliterator(), false)
                      .forEach(ValueTypeUtils::requireNotEmpty);
 
-        var data = mongoClient.getDatabase(tenantId.toString()).withCodecRegistry(codecRegistry);
-        var collection = data.getCollection( "booking", Booking.class);
+        var data = mongoClient.getDatabase(tenantId.getValue().toString()).withCodecRegistry(codecRegistry);
+        var collection = MongoUtils.requireCollection(data, "booking").withDocumentClass(Booking.class);
 
         StreamSupport.stream(bookingIds.spliterator(), false).forEach(
                 it -> collection.findOneAndDelete(Filters.eq("_id", it.getValue())

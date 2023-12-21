@@ -3,13 +3,14 @@ package net.bebooking.booking.model;
 import lombok.Getter;
 import lombok.Setter;
 import org.ecom24.common.utils.ErrorUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Getter
-public class Booking {
+public class Booking implements Comparable<Booking>{
 
     private final BookingId id;
 
@@ -75,6 +76,23 @@ public class Booking {
 
     @Override
     public int hashCode() {
-        return Booking.class.hashCode() + id.hashCode() * 31;
+        return Booking.class.hashCode() + this.id.getClass().hashCode() * 31;
+    }
+
+    @Override
+    public String toString() {
+        return "Booking{" +
+                "id=" + id +
+                ", from=" + from +
+                ", to=" + to +
+                ", status=" + status +
+                ", note='" + note + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
+    }
+
+    @Override
+    public int compareTo(@NotNull Booking o) {
+        return this.id.getValue().compareTo(o.getId().getValue());
     }
 }

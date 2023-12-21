@@ -3,6 +3,7 @@ package net.bebooking.book.dao;
 import com.mongodb.client.MongoClient;
 import net.bebooking.booking.dao.BookingRepository;
 import net.bebooking.booking.model.Booking;
+import net.bebooking.booking.model.BookingId;
 import net.bebooking.config.MongoConfig;
 import net.bebooking.tenant.model.TenantId;
 import net.bebooking.utils.MongoUtils;
@@ -42,7 +43,6 @@ public class BookDAOTest {
 
     @BeforeAll
     public void setUp() {
-
     }
 
     @AfterAll
@@ -57,30 +57,80 @@ public class BookDAOTest {
 
         var ids = repository.insertAll(testTenant, List.of(booking1, booking2));
 
-        var exists = StreamSupport.stream(repository.fetchAllByIds(testTenant, ids).spliterator(), false)
+        var sizeIds = StreamSupport.stream(ids.spliterator(), false)
+                .toList().size();
+
+        Assert.assertEquals(2, sizeIds);
+        Assert.assertNotNull(BookingId.parseNotEmpty(ids.iterator().next()));
+        Assert.assertNotNull(BookingId.parseNotEmpty(ids.iterator().next()));
+    }
+
+    @Test
+    public void fetchById_success() {
+        var tempBookings = createTempsBookings(Instant.parse("2023-12-25T18:34:56.00Z"), Instant.parse("2024-01-12T08:45:51.00Z"));
+        var id = repository.insertAll(testTenant, tempBookings).iterator().next();
+
+        var tempBooking = tempBookings.get(0);
+        var testBooking = Booking.of(id, tempBooking.getFrom(), tempBooking.getTo(), tempBooking.getStatus(), tempBooking.getNote(), tempBooking.getCreatedAt());
+
+        var booking = repository.fetchById(testTenant, id);
+
+        Assert.assertNotNull(booking);
+        Assert.assertNotNull(BookingId.parseNotEmpty(booking.getId()));
+        Assert.assertEquals(testBooking, booking);
+    }
+
+    @Test
+    public void fetchAllByIds_success() {
+        var tempsBookings = createTempsBookings(Instant.parse("2023-12-25T18:34:56.00Z"), Instant.parse("2024-01-12T08:45:51.00Z"));
+        var ids = StreamSupport.stream(repository.insertAll(testTenant, tempsBookings).spliterator(), false).toList();
+        var bookingsFetches = ids.stream().map(it -> repository.fetchById(testTenant, it)).toList();
+
+        //Добавим лишний объект, он не должен попасть в диапазон fetchAllByIds
+        var tempAddBooking = Booking.newOf(Instant.parse("2024-01-07T13:32:08.00Z"), Instant.parse("2024-01-17T22:31:33.00Z"), "До моря 15 минут");
+        var id = repository.insertAll(testTenant, List.of(tempAddBooking));
+        tempAddBooking = Booking.of(id.iterator().next(), tempAddBooking.getFrom(), tempAddBooking.getTo(), tempAddBooking.getStatus(), tempAddBooking.getNote(), tempAddBooking.getCreatedAt());
+
+        var bookings = StreamSupport.stream(repository.fetchAllByIds(testTenant, ids).spliterator(), false).toList();
+
+        Assert.assertEquals(4, ids.size());
+
+        Assert.assertTrue(bookings.contains(bookingsFetches.get(0)));
+        Assert.assertTrue(bookings.contains(bookingsFetches.get(1)));
+        Assert.assertTrue(bookings.contains(bookingsFetches.get(2)));
+        Assert.assertTrue(bookings.contains(bookingsFetches.get(3)));
+
+        Assert.assertFalse(bookings.contains(tempAddBooking));
+    }
+
+    @Test
+    public void fetchAll_success() {
+        var tempBookings = StreamSupport.stream(repository.insertAll(testTenant, createTempsBookings(Instant.parse("2023-12-25T18:34:56.00Z"),
+                Instant.parse("2024-01-12T08:45:51.00Z"))).spliterator(), false)
+                .toList().stream()
+                .map(it -> repository.fetchById(testTenant, it))
                 .toList();
 
-        Assert.assertEquals(2, exists.size());
-        Assert.assertNotNull(exists.get(0).getId());
-        Assert.assertNotNull(exists.get(1).getId());
-        Assert.assertEquals(exists.get(0).getFrom(), booking1.getFrom());
-        Assert.assertEquals(exists.get(0).getTo(), booking1.getTo());
-        Assert.assertEquals(exists.get(0).getNote(), booking1.getNote());
-        Assert.assertEquals(exists.get(1).getFrom(), booking2.getFrom());
-        Assert.assertEquals(exists.get(1).getTo(), booking2.getTo());
-        Assert.assertEquals(exists.get(1).getNote(), booking2.getNote());
+        var bookings = StreamSupport.stream(repository.fetchAll(testTenant).spliterator(), false).toList();
 
-        //equals
-        MongoUtils.cleanCache(mongoClient.getDatabase(testTenant.getValue().toString())
-                  .getCollection("booking"));
+        Assert.assertEquals(4, bookings.size());
+        Assert.assertArrayEquals(tempBookings.toArray(), bookings.toArray());
+    }
+
+    @Test
+    public void deleteAll_success() {
+        var tempBookings = StreamSupport.stream(repository.insertAll(testTenant, createTempsBookings(Instant.parse("2023-12-25T18:34:56.00Z"),
+                Instant.parse("2024-01-12T08:45:51.00Z"))).spliterator(), false).toList();
+
+        Assert.assertEquals(4, tempBookings.size());
+        repository.deleteAll(testTenant, tempBookings);
+
+        var bookings = StreamSupport.stream(repository.fetchAll(testTenant).spliterator(), false).toList();
+
+        Assert.assertTrue(bookings.isEmpty());
     }
 
     private static List<Booking> createTempsBookings(Instant fromDate, Instant toDate) {
-//        var fromDate = Instant.parse("2023-12-25T18:34:56").toString();
-//        Strvaring toDate = "2024-01-11 11:45:30";
-//        LocalDateTime from = LocalDateTime.parse(fromDate, format);
-//        LocalDateTime to = LocalDateTime.parse(toDate, format);
-
         List<String> descriptions = List.of(
                 "Большой зал с ТВ", "Хочу большой зал с ТВ",
                 "Можно пиво в холодосе", "Буду с собакой"
