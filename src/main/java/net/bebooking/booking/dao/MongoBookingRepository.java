@@ -27,28 +27,18 @@ public class MongoBookingRepository implements BookingRepository {
     private final MongoClient mongoClient;
     private final CodecRegistry codecRegistry;
 
-    public MongoBookingRepository(MongoClient mongoClient) {
+    public MongoBookingRepository(MongoClient mongoClient, CodecRegistry bookingCodecRegistry) {
         this.mongoClient = mongoClient;
-
-        CodecRegistry codecRegistry = MongoClientSettings.getDefaultCodecRegistry();
-        Codec<Document> documentCodec = codecRegistry.get(Document.class);
-        Codec<Booking> bookingCodec = new BookingCodec(codecRegistry);
-
-        codecRegistry =  CodecRegistries.fromRegistries(
-                MongoClientSettings.getDefaultCodecRegistry(),
-                CodecRegistries.fromCodecs(
-                        documentCodec,
-                        bookingCodec
-                )
-        );
-        this.codecRegistry = codecRegistry;
+        this.codecRegistry = bookingCodecRegistry;
     }
 
     @Override
     public Iterable<BookingId> insertAll(TenantId tenantId, Iterable<Booking> bookings) {
         ValueTypeUtils.requireNotEmpty(tenantId);
+
         var data = mongoClient.getDatabase(tenantId.getValue().toString()).withCodecRegistry(codecRegistry);
         var collection = MongoUtils.requireCollection(data, "booking");
+
         return StreamSupport.stream(bookings.spliterator(), false)
                 .map(it -> {
                     ValueTypeUtils.requireEmpty(it.getId());
@@ -62,8 +52,10 @@ public class MongoBookingRepository implements BookingRepository {
     public Booking fetchById(TenantId tenantId, BookingId bookingId) {
         ValueTypeUtils.requireNotEmpty(tenantId);
         ValueTypeUtils.requireNotEmpty(bookingId);
+
         var data = mongoClient.getDatabase(tenantId.getValue().toString()).withCodecRegistry(codecRegistry);
         var collection = MongoUtils.requireCollection(data,"booking");
+
         return collection.find(
                 Filters.eq("_id", bookingId.getValue()), Booking.class
         ).first();
@@ -72,17 +64,18 @@ public class MongoBookingRepository implements BookingRepository {
     @Override
     public Iterable<Booking> fetchAll(TenantId tenantId) {
         ValueTypeUtils.requireNotEmpty(tenantId);
+
         var data = mongoClient.getDatabase(tenantId.getValue().toString()).withCodecRegistry(codecRegistry);
         var collection = MongoUtils.requireCollection(data, "booking").withDocumentClass(Booking.class);
+
         var bookings = new ArrayList<Booking>();
-        return collection.find().into(bookings)
-                .stream()
-                .toList();
+        return collection.find().into(bookings).stream().toList();
     }
 
     @Override
     public Iterable<Booking> fetchAllByIds(TenantId tenantId, Iterable<BookingId> bookingIds) {
         ValueTypeUtils.requireNotEmpty(tenantId);
+
         var data = mongoClient.getDatabase(tenantId.getValue().toString()).withCodecRegistry(codecRegistry);
         var collection = MongoUtils.requireCollection(data, "booking").withDocumentClass(Booking.class);
 
@@ -93,9 +86,7 @@ public class MongoBookingRepository implements BookingRepository {
         var filter = new Document("_id", new Document("$in", ids));
         var bookings = new ArrayList<Booking>();
 
-        return collection.find(filter).into(bookings)
-                .stream()
-                .toList();
+        return collection.find(filter).into(bookings).stream().toList();
     }
 
     @Override
@@ -110,6 +101,7 @@ public class MongoBookingRepository implements BookingRepository {
         var ids = StreamSupport.stream(bookingIds.spliterator(), false)
                         .map(AbstractType::getValue).toList();
         var filter = new Document("_id", new Document("$in", ids));
+
         collection.deleteMany(filter);
     }
 }

@@ -15,6 +15,8 @@ public interface ClientRepository {
 
     Iterable<Client> fetchAll(TenantId tenantId);
 
-    void deleteAll(TenantId tenantId, Iterable<ClientId> clientIds);
+    Iterable<Client> fetchAllByIds(TenantId tenantId, Iterable<ClientId> clientIds);
+
+    void deleteAllByIds(TenantId tenantId, Iterable<ClientId> clientIds);
 
 }

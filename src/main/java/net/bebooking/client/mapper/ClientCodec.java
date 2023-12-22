@@ -13,7 +13,6 @@ import org.bson.codecs.configuration.CodecRegistry;
 import java.util.Optional;
 
 public class ClientCodec implements CollectibleCodec<Client> {
-
     private final CodecRegistry codecRegistry;
     private final Codec<Document> documentCodec;
     private final ClientConverter converter;

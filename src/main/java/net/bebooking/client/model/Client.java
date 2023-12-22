@@ -85,4 +85,17 @@ public class Client {
             ErrorUtils.argumentError("Phone number is not correct");
         this.phoneNumber = phoneNumber;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Client client = (Client) o;
+        return Objects.equals(id, client.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return ClientId.class.hashCode() + this.id.getClass().hashCode() * 31;
+    }
 }

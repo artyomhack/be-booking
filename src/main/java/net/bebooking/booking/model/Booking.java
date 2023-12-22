@@ -93,6 +93,6 @@ public class Booking implements Comparable<Booking>{
 
     @Override
     public int compareTo(@NotNull Booking o) {
-        return this.id.getValue().compareTo(o.getId().getValue());
+        return this.getFrom().compareTo(o.getFrom());
     }
 }

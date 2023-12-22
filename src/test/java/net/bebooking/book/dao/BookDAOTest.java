@@ -50,7 +50,7 @@ public class BookDAOTest {
 
     @AfterAll
     public void removeAll() {
-        MongoUtils.dropData(mongoClient, testTenant);
+        MongoUtils.dropData(mongoClient, testTenant.getValue().toString());
     }
 
     @Test
@@ -66,6 +66,8 @@ public class BookDAOTest {
         Assert.assertEquals(2, sizeIds);
         Assert.assertNotNull(BookingId.parseNotEmpty(ids.iterator().next()));
         Assert.assertNotNull(BookingId.parseNotEmpty(ids.iterator().next()));
+        //booking1 = Booking.of(ids.iterator().next, booking1.get..)
+        ////booking2 = Booking.of(ids.iterator().next, booking1.get..)
     }
 
     @Test
@@ -127,7 +129,7 @@ public class BookDAOTest {
 
 
     @Test
-    public void deleteAll_fail() {
+    public void deleteAllByIds_fail() {
         var tempBookings = StreamSupport.stream(repository.insertAll(testTenant, createTempsBookings(
                 Instant.parse("2023-12-25T18:34:56.00Z"),
                 Instant.parse("2024-01-12T08:45:51.00Z")
