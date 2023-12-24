@@ -1,6 +1,7 @@
 package net.bebooking.client.dao;
 
 import com.mongodb.client.MongoClient;
+import net.bebooking.MongoTestContainerConfig;
 import net.bebooking.client.model.Client;
 import net.bebooking.client.model.ClientId;
 import net.bebooking.config.MongoConfig;
@@ -12,13 +13,17 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest
 @ContextConfiguration(classes = MongoConfig.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -28,7 +33,7 @@ public class ClientDAOTest {
 
     private final MongoClient mongoClient;
 
-    private final static TenantId testTenant = MongoUtils.tenantTestOf();
+    private final static TenantId tenantTest = MongoUtils.tenantTestOf();
 
     @Autowired
     public ClientDAOTest(ClientRepository clientRepository, MongoClient mongoClient) {
@@ -38,13 +43,13 @@ public class ClientDAOTest {
 
     @AfterEach
     public void removeCache() {
-        MongoUtils.cleanCache(mongoClient.getDatabase(testTenant.getValue().toString())
+        MongoUtils.cleanCache(mongoClient.getDatabase(tenantTest.getValue().toString())
                 .getCollection("client"));
     }
 
     @AfterAll
     public void removeAll() {
-        MongoUtils.dropData(mongoClient, testTenant.getValue().toString());
+        MongoUtils.dropData(mongoClient, tenantTest.getValue().toString());
     }
 
     @Test
@@ -54,7 +59,7 @@ public class ClientDAOTest {
         var client2 = Client.newOf("Камилла Шакирова", "kami1234@gmail.com", "79953362750",
                 "Любит смотреть сериалы", "Russia", "Kazan");
 
-        var ids = StreamSupport.stream(clientRepository.insertAll(testTenant, List.of(client1, client2))
+        var ids = StreamSupport.stream(clientRepository.insertAll(tenantTest, List.of(client1, client2))
                         .spliterator(), false)
                         .toList();
 
@@ -65,11 +70,11 @@ public class ClientDAOTest {
 
     @Test
     public void fetchById_success() {
-        var ids = StreamSupport.stream(clientRepository.insertAll(testTenant, createTempClients()).spliterator(), false)
+        var ids = StreamSupport.stream(clientRepository.insertAll(tenantTest, createTempClients()).spliterator(), false)
                 .toList();
         var clientId = ids.get(2);
 
-        var testClient = clientRepository.fetchById(testTenant, clientId);
+        var testClient = clientRepository.fetchById(tenantTest, clientId);
         Assert.assertNotNull(testClient);
 
         var client = Client.of(clientId, testClient.getFullName(), testClient.getEmail(), testClient.getPhoneNumber(),
@@ -80,20 +85,20 @@ public class ClientDAOTest {
 
     @Test
     public void fetchAll_success() {
-        MongoUtils.cleanCache(mongoClient.getDatabase(testTenant.getValue().toString())
+        MongoUtils.cleanCache(mongoClient.getDatabase(tenantTest.getValue().toString())
                 .getCollection("client"));
 
-        var ids = StreamSupport.stream(clientRepository.insertAll(testTenant, createTempClients()).spliterator(), false)
+        var ids = StreamSupport.stream(clientRepository.insertAll(tenantTest, createTempClients()).spliterator(), false)
                 .toList();
 
-        var testClients = StreamSupport.stream(clientRepository.fetchAll(testTenant).spliterator(), false)
+        var testClients = StreamSupport.stream(clientRepository.fetchAll(tenantTest).spliterator(), false)
                 .toArray();
 
         Assert.assertEquals(ids.size(), testClients.length);
 
         var clients = Stream.iterate(0, i -> i + 1)
                 .limit(ids.size())
-                .map(i -> clientRepository.fetchById(testTenant, ids.get(i)))
+                .map(i -> clientRepository.fetchById(tenantTest, ids.get(i)))
                 .toArray();
 
         Assert.assertArrayEquals(testClients, clients);
@@ -101,15 +106,15 @@ public class ClientDAOTest {
 
     @Test
     public void fetchAllByIds_success() {
-        var ids = StreamSupport.stream(clientRepository.insertAll(testTenant, createTempClients()).spliterator(), false)
+        var ids = StreamSupport.stream(clientRepository.insertAll(tenantTest, createTempClients()).spliterator(), false)
                 .toList();
-        var clients = ids.stream().map(it -> clientRepository.fetchById(testTenant, it)).toList();
+        var clients = ids.stream().map(it -> clientRepository.fetchById(tenantTest, it)).toList();
 
-        var excessId = clientRepository.insertAll(testTenant, List.of(Client.newOf("Миша Кулаков", "mihail@gmail.com",
+        var excessId = clientRepository.insertAll(tenantTest, List.of(Client.newOf("Миша Кулаков", "mihail@gmail.com",
                 "79965465678", "Опаздывает с оплатой", "Russia", "Kazan")));
-        var excessClient = clientRepository.fetchById(testTenant, excessId.iterator().next());
+        var excessClient = clientRepository.fetchById(tenantTest, excessId.iterator().next());
 
-        var testClients = StreamSupport.stream(clientRepository.fetchAllByIds(testTenant, ids).spliterator(), false)
+        var testClients = StreamSupport.stream(clientRepository.fetchAllByIds(tenantTest, ids).spliterator(), false)
                 .toList();
 
         Assert.assertEquals(ids.size(), testClients.size());
@@ -123,21 +128,21 @@ public class ClientDAOTest {
 
     @Test
     public void deleteAllByIds_success() {
-        var ids = StreamSupport.stream(clientRepository.insertAll(testTenant, createTempClients()).spliterator(), false)
+        var ids = StreamSupport.stream(clientRepository.insertAll(tenantTest, createTempClients()).spliterator(), false)
                 .toList();
 
-        var excessId = clientRepository.insertAll(testTenant, List.of(Client.newOf("Миша Кулаков", "mihail@gmail.com",
+        var excessId = clientRepository.insertAll(tenantTest, List.of(Client.newOf("Миша Кулаков", "mihail@gmail.com",
                 "79965465678", "Опаздывает с оплатой", "Russia", "Kazan")));
-        var excessClient = clientRepository.fetchById(testTenant, excessId.iterator().next());
+        var excessClient = clientRepository.fetchById(tenantTest, excessId.iterator().next());
 
-        clientRepository.deleteAllByIds(testTenant, ids);
+        clientRepository.deleteAllByIds(tenantTest, ids);
 
-        var clients = StreamSupport.stream(clientRepository.fetchAllByIds(testTenant, ids).spliterator(), false)
+        var clients = StreamSupport.stream(clientRepository.fetchAllByIds(tenantTest, ids).spliterator(), false)
                 .toList();
 
         Assert.assertTrue(clients.isEmpty());
 
-        clients = StreamSupport.stream(clientRepository.fetchAll(testTenant).spliterator(), false)
+        clients = StreamSupport.stream(clientRepository.fetchAll(tenantTest).spliterator(), false)
                 .toList();
 
         Assert.assertEquals(1, clients.size());

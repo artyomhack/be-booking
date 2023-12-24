@@ -16,6 +16,7 @@ import org.bson.Document;
 import org.bson.codecs.Codec;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -25,15 +26,8 @@ public class MongoConfig {
     private final Codec<Document> documentCodec = codecRegistry.get(Document.class);
 
     @Bean
-    public MongoClient mongoClient() {
-        String username = "root";
-        String password = "ASDqwe123";
-        String host = "mongo.bebooking.ru";
-        int port = 27017;
-        String connectionString = "mongodb://" + username + ":" + password + "@" + host + ":" + port;
-        ConnectionString connection = new ConnectionString(connectionString);
-
-
+    public MongoClient mongoClient(MongoProperties properties) {
+        ConnectionString connection = new ConnectionString(properties.getUrl());
         return MongoClients.create(connection);
     }
 
@@ -62,12 +56,19 @@ public class MongoConfig {
     }
 
     @Bean
-    public BookingRepository bookingRepository() {
-        return new MongoBookingRepository(mongoClient(), bookingCodecRegistry());
+    @Autowired
+    public BookingRepository bookingRepository(MongoClient mongoClient) {
+        return new MongoBookingRepository(mongoClient, bookingCodecRegistry());
     }
 
     @Bean
-    public ClientRepository clientRepository() {
-        return new MongoClientRepository(mongoClient(), clientCodecRegistry());
+    @Autowired
+    public ClientRepository clientRepository(MongoClient mongoClient) {
+        return new MongoClientRepository(mongoClient, clientCodecRegistry());
+    }
+
+    @Bean
+    public MongoProperties properties() {
+        return new MongoProperties();
     }
 }
