@@ -67,8 +67,8 @@ public class MongoConfig {
         return new MongoClientRepository(mongoClient, clientCodecRegistry());
     }
 
-    @Bean
-    public MongoProperties properties() {
-        return new MongoProperties();
-    }
+//    @Bean
+//    public MongoProperties properties() {
+//        return new MongoProperties();
+//    }
 }

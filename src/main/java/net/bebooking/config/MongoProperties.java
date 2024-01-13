@@ -1,28 +1,27 @@
 package net.bebooking.config;
 
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.jetbrains.annotations.PropertyKey;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.context.properties.bind.ConstructorBinding;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+
+
+
 
 @ConfigurationProperties(prefix = "bebooking.mongodb")
+@AllArgsConstructor
 @Getter
 public class MongoProperties {
 
-    @Value("${bebooking.mongodb.host}")
-    private  String host;
-
-    @Value("${bebooking.mongodb.port}")
-    private  Integer port;
-
-    @Value("${bebooking.mongodb.username}")
-    private  String username;
-
-    @Value("${bebooking.mongodb.password}")
-    private  String password;
+    private final String host;
+    private final int port;
+    private final String username;
+    private final String password;
 
     public String getUrl() {
         return "mongodb://" + username + ":" + password + "@" + host + ":" + port;

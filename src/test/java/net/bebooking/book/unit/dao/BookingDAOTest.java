@@ -1,11 +1,12 @@
 package net.bebooking.book.unit.dao;
 
 import com.mongodb.client.MongoClient;
-import net.bebooking.MongoTestContainerConfig;
+import net.bebooking.BaseMongoTest;
 import net.bebooking.booking.dao.BookingRepository;
 import net.bebooking.booking.model.Booking;
 import net.bebooking.booking.model.BookingId;
 import net.bebooking.config.MongoConfig;
+import net.bebooking.config.MongoProperties;
 import net.bebooking.tenant.model.TenantId;
 import net.bebooking.utils.MongoUtils;
 import org.junit.jupiter.api.*;
@@ -23,23 +24,19 @@ import java.util.stream.StreamSupport;
 
 
 @SpringBootTest
- @Testcontainers
 @ContextConfiguration(classes = MongoConfig.class)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class BookingDAOTest {
+public class BookingDAOTest extends BaseMongoTest {
     private final static TenantId tenantTest = MongoUtils.tenantTestOf();
     private final BookingRepository bookingRepository;
     private final MongoClient mongoClient;
 
-    @BeforeAll
-    public static void beforeAll() {
-        MongoTestContainerConfig.beforeStart();
-    }
     //Не видит без аннотации
     @Autowired
-    public BookingDAOTest(BookingRepository bookingRepository, MongoClient mongoClient) {
+    public BookingDAOTest(BookingRepository bookingRepository, MongoClient mongoClient, MongoProperties props) {
         this.bookingRepository = bookingRepository;
         this.mongoClient = mongoClient;
+        System.out.println(props.getHost());
+        System.out.println(props.getPort());
     }
 
     @AfterEach
@@ -48,13 +45,8 @@ public class BookingDAOTest {
                 .getCollection("booking"));
     }
 
-    @AfterAll
-    public void removeAll() {
-        MongoUtils.dropData(mongoClient, tenantTest.getValue().toString());
-    }
-
     @Test
-      public void insertAll_success() {
+      public void insertAll_success() throws InterruptedException {
         var booking1 = Booking.newOf(Instant.parse("2023-12-25T18:34:56.00Z"), Instant.parse("2024-01-12T08:45:51.00Z"),  "Вид на море");
         var booking2 = Booking.newOf(Instant.parse("2023-07-29T09:22:51.00Z"), Instant.parse("2023-08-06T19:54:06.00Z"), "Два туалета");
 

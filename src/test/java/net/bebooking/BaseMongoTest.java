@@ -1,17 +1,19 @@
 package net.bebooking;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.springframework.context.annotation.Configuration;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.core.env.Environment;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.List;
+
 @Testcontainers
-@PropertySource("classpath:application.yml")
-public class MongoTestContainerConfig {
+@ActiveProfiles("integration")
+public abstract class BaseMongoTest {
     private final static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0.4");
 
     @DynamicPropertySource
@@ -31,13 +33,18 @@ public class MongoTestContainerConfig {
                 mongoDBContainer::getHost
         );
         registry.add(
-                "bebooking.mongo.port",
-                mongoDBContainer::getFirstMappedPort
+                "bebooking.mongo.port", () -> 2380
         );
     }
 
     @BeforeAll
-    public static void beforeStart() {
+    public static void beforeStart() {;
+        mongoDBContainer.setPortBindings(List.of("2380:27071"));
         mongoDBContainer.start();
+    }
+
+    @Test
+    void test() {
+
     }
 }

@@ -1,7 +1,6 @@
 package net.bebooking.client.dao;
 
 import com.mongodb.client.MongoClient;
-import net.bebooking.MongoTestContainerConfig;
 import net.bebooking.client.model.Client;
 import net.bebooking.client.model.ClientId;
 import net.bebooking.config.MongoConfig;
@@ -9,16 +8,9 @@ import net.bebooking.tenant.model.TenantId;
 import net.bebooking.utils.MongoUtils;
 import org.junit.Assert;
 import org.junit.jupiter.api.*;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.stream.Stream;
