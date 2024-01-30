@@ -1,0 +1,9 @@
+bebooking:
+  mongodb:
+    host: ${MONGODB_HOST:10.0.110.20}
+    port: ${MONGODB_PORT:27017}
+    username: ${MONGODB_USERNAME}
+    password: ${MONGODB_PASSWORD}
+
+
+

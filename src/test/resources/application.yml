@@ -1,0 +1,7 @@
+#configuration for access mongodb
+bebooking:
+  mongodb:
+    host: ${MONGODB_DATABASE:mongo.bebooking.ru}
+    port: ${MONGODB_PORT:27017}
+    username: ${MONGODB_USERNAME:root}
+    password: ${MONGODB_PASSWORD:ASDqwe123}

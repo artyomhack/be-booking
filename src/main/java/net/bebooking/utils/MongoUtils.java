@@ -19,8 +19,8 @@ public class MongoUtils {
         return mongoDatabase.getCollection(collectionName);
     }
 
-    public static void dropData(MongoClient mongoClient, TenantId tenantId) {
-        mongoClient.getDatabase(tenantId.getValue().toString()).drop();
+    public static void dropData(MongoClient mongoClient, String dataName) {
+        mongoClient.getDatabase(dataName).drop();
     }
 
     public static TenantId tenantTestOf() {
